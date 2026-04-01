@@ -31,7 +31,7 @@ const Marketplace = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/products');
+                const response = await fetch('http://localhost:5001/api/products');
                 const data = await response.json();
                 setDbProducts(data);
                 setIsLoading(false);
@@ -292,7 +292,7 @@ const Marketplace = () => {
                                 formData.append('userId', user.id);
 
                                 try {
-                                    const response = await fetch('http://localhost:5000/api/seller/request', {
+                                    const response = await fetch('http://localhost:5001/api/seller/request', {
                                         method: 'POST',
                                         body: formData
                                     });

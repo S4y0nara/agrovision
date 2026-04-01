@@ -31,7 +31,7 @@ export const CartProvider = ({ children }) => {
         const fetchUserData = async () => {
             if (user && user.id) {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/user/${user.id}`);
+                    const response = await fetch(`http://localhost:5001/api/user/${user.id}`);
                     const data = await response.json();
                     if (response.ok) {
                         // Merge or overwrite? Let's overwrite with DB state as truth
@@ -60,7 +60,7 @@ export const CartProvider = ({ children }) => {
         const syncCartWithDB = async () => {
             if (user && user.id) {
                 try {
-                    await fetch('http://localhost:5000/api/user/cart', {
+                    await fetch('http://localhost:5001/api/user/cart', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -85,7 +85,7 @@ export const CartProvider = ({ children }) => {
         const syncFavsWithDB = async () => {
             if (user && user.id) {
                 try {
-                    await fetch('http://localhost:5000/api/user/favorites', {
+                    await fetch('http://localhost:5001/api/user/favorites', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

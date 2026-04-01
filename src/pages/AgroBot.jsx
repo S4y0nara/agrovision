@@ -18,7 +18,7 @@ const AgroBot = () => {
     const navigate = useNavigate();
     const scrollRef = useRef(null);
 
-    const API_URL = 'http://localhost:5000/api/chat';
+    const API_URL = 'http://localhost:5001/api/chat';
 
     const getWelcomeMessage = useCallback(() => ({
         role: 'assistant',

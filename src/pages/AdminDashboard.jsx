@@ -23,10 +23,10 @@ const AdminDashboard = () => {
             try {
                 // Parallel fetch
                 const [ordersRes, sellerRes, usersRes, productsRes] = await Promise.all([
-                    fetch('http://localhost:5000/api/admin/orders'),
-                    fetch('http://localhost:5000/api/seller/requests'),
-                    fetch('http://localhost:5000/api/user/all'),
-                    fetch('http://localhost:5000/api/products')
+                    fetch('http://localhost:5001/api/admin/orders'),
+                    fetch('http://localhost:5001/api/seller/requests'),
+                    fetch('http://localhost:5001/api/user/all'),
+                    fetch('http://localhost:5001/api/products')
                 ]);
 
                 const [ordersData, sellerData, usersData, productsData] = await Promise.all([
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
     const handleDeleteProduct = async (id) => {
         if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+            const res = await fetch(`http://localhost:5001/api/products/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setProducts(products.filter(p => p._id !== id));
             }
@@ -75,9 +75,9 @@ const AdminDashboard = () => {
     const handleAction = async (endpoint, id, method = 'POST') => {
         if (!confirm('Êtes-vous sûr de vouloir effectuer cette action ?')) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/seller/${endpoint}/${id}`, { method });
+            const res = await fetch(`http://localhost:5001/api/seller/${endpoint}/${id}`, { method });
             if (res.ok) {
-                const updatedRequests = await fetch('http://localhost:5000/api/seller/requests').then(r => r.json());
+                const updatedRequests = await fetch('http://localhost:5001/api/seller/requests').then(r => r.json());
                 setSellerRequests(updatedRequests);
             }
         } catch (e) {
@@ -315,10 +315,10 @@ const AdminDashboard = () => {
                                                 <td className="px-8 py-6">
                                                     {req.productImage ? (
                                                         <img
-                                                            src={`http://localhost:5000${req.productImage}`}
+                                                            src={`http://localhost:5001${req.productImage}`}
                                                             alt="Preview"
                                                             className="w-14 h-14 rounded-2xl object-cover shadow-lg hover:scale-150 transition-all cursor-zoom-in"
-                                                            onClick={() => window.open(`http://localhost:5000${req.productImage}`, '_blank')}
+                                                            onClick={() => window.open(`http://localhost:5001${req.productImage}`, '_blank')}
                                                         />
                                                     ) : (
                                                         <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">

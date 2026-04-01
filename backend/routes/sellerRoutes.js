@@ -62,7 +62,7 @@ router.post('/approve/:id', async (req, res) => {
             name: `${request.productType} by ${request.companyName}`, // Default name format
             category: request.productType,
             price: `${request.price} DT`,
-            image: `http://localhost:5000${request.productImage}`,
+            image: `http://localhost:5001${request.productImage}`,
             tag: "Nouveau",
             desc: request.description,
             stock: request.stock,

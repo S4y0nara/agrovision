@@ -28,7 +28,7 @@ export default function App() {
     const seedAdmin = async () => {
       try {
         // Seed default admin
-        await fetch('http://localhost:5000/api/auth/register', {
+        await fetch('http://localhost:5001/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -40,7 +40,7 @@ export default function App() {
         });
 
         // Seed Youssef's admin account
-        await fetch('http://localhost:5000/api/auth/register', {
+        await fetch('http://localhost:5001/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

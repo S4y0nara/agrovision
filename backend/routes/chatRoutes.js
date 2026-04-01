@@ -2,15 +2,12 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Conversation = require('../models/Conversation');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const Groq = require("groq-sdk");
 
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// Note: SDK 0.24.x usually works with v1 internally, but if v1beta fails, we stick to standard strings.
-const model = genAI.getGenerativeModel({
-    model: "gemini-pro-latest",
-    systemInstruction: `
-You are AgroBot, a world-class AI agricultural consultant. Your mission is to provide expert-level, actionable, and scientific advice to farmers and agricultural enthusiasts.
+// Initialize Groq
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+const SYSTEM_INSTRUCTION = `You are AgroBot, a world-class AI agricultural consultant. Your mission is to provide expert-level, actionable, and scientific advice to farmers and agricultural enthusiasts.
 
 Formatting & Style:
 1. Tone: Highly professional, encouraging, and authoritative yet accessible.
@@ -25,11 +22,7 @@ Pour les sols sablonneux, je recommande la plantation de **Légumes-racines** co
 
 💧 **Stratégie d'Irrigation**
 Puisque le sol sablonneux draine rapidement, utilisez un système de **Goutte-à-goutte**... ✅"
-`
-});
-
-// We keep this for logic check but the model now has it built-in
-const SYSTEM_INSTRUCTION = "Professional Agricultural Expert";
+`;
 
 
 // GET History
@@ -101,16 +94,24 @@ router.post('/', async (req, res) => {
             conversation.messages.push({ role: 'user', content: message });
         }
 
-        // Call External intelligence
-        const chat = model.startChat({
-            history: chatHistory,
-            generationConfig: { maxOutputTokens: 2000 }
-        });
+        // Build Groq messages with chat history
+        const groqMessages = [
+            { role: 'system', content: SYSTEM_INSTRUCTION },
+            ...chatHistory.map(m => ({
+                role: m.role === 'model' ? 'assistant' : m.role,
+                content: m.parts[0].text
+            })),
+            { role: 'user', content: message }
+        ];
 
-        console.log("-> Calling Gemini API...");
-        const result = await chat.sendMessage(message);
-        const aiReply = result.response.text();
-        console.log("-> Gemini responded successfully.");
+        console.log("-> Calling Groq API...");
+        const completion = await groq.chat.completions.create({
+            model: 'llama-3.3-70b-versatile',
+            messages: groqMessages,
+            max_tokens: 2000,
+        });
+        const aiReply = completion.choices[0].message.content;
+        console.log("-> Groq responded successfully.");
 
         if (isDbConnected) {
             conversation.messages.push({ role: 'assistant', content: aiReply });

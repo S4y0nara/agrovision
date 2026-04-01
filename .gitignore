@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Backend secrets (never commit)
+backend/.env
+backend/uploads/
+
+# ML dataset / notebooks
+potato-disease/training/
+**/.ipynb_checkpoints/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

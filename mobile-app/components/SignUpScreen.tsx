@@ -37,12 +37,36 @@ export default function SignUpScreen({ onNext, onBack }: SignUpScreenProps) {
 
     const handleNext = async () => {
         try {
+            const API_URL = 'http://192.168.1.15:5001';
+            const response = await fetch(`${API_URL}/api/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullName: name,
+                    email: email,
+                    password: password
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Save to storage and proceed
+                await AsyncStorage.setItem('user_id', data.user.id);
+                await AsyncStorage.setItem('user_token', data.token);
+                await AsyncStorage.setItem('user_name', name);
+                await AsyncStorage.setItem('user_email', email);
+                onNext();
+            } else {
+                alert(data.message || 'Registration failed');
+            }
+        } catch (error) {
+            console.error('Error connection to server:', error);
+            alert('Could not connect to server. Registration saved locally for now.');
+            // Fallback to local storage only if offline
             await AsyncStorage.setItem('user_name', name);
             await AsyncStorage.setItem('user_email', email);
             onNext();
-        } catch (error) {
-            console.error('Error saving user data:', error);
-            onNext(); // Proceed anyway but log error
         }
     };
 

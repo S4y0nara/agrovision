@@ -20,6 +20,21 @@ export default function FarmProfileScreen({ onNext, onBack }: FarmProfileScreenP
 
     const handleNext = async () => {
         try {
+            const API_URL = 'http://192.168.1.15:5001';
+            const userId = await AsyncStorage.getItem('user_id');
+
+            if (userId) {
+                // Update profile in backend
+                await fetch(`${API_URL}/api/user/update`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId,
+                        location: location
+                    }),
+                });
+            }
+
             await AsyncStorage.setItem('farm_name', farmName);
             await AsyncStorage.setItem('farm_location', location);
             await AsyncStorage.setItem('farm_size', farmSize);
