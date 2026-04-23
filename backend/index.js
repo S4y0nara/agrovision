@@ -68,13 +68,13 @@ const connectDB = async () => {
     const { uri, opts } = getMongoConnectArgs();
     try {
         await mongoose.connect(uri, opts);
-        console.log('✅ MongoDB connected successfully');
+        console.log('MongoDB connected successfully ya 5chin');
     } catch (err) {
-        console.error('❌ MongoDB connection error:', err.message);
+        console.error('MongoDB connection error:', err.message);
         if (String(err.message).includes('bad auth')) {
-            console.log('💡 In Atlas → Database Access: confirm username (Youssef) and password match backend/.env; user must have "Read and write to any database" or built-in role.');
+            console.log('In Atlas → Database Access: confirm username (Youssef) and password match backend/.env; user must have "Read and write to any database" or built-in role.');
         }
-        console.log('⚠️ Running in offline-first mode (some features may be limited)');
+        console.log('Running in offline-first mode (some features may be limited)');
     }
 };
 
@@ -87,5 +87,5 @@ app.get('/', (req, res) => {
 
 // Start Server
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
