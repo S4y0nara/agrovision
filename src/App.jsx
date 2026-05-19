@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Header from "./components/Header"
 import Hero from "./components/Hero"
@@ -18,43 +17,18 @@ import Weather from "./pages/Weather"
 import Marketplace from "./pages/Marketplace"
 import AuthGateway from "./pages/AuthGateway"
 import AdminDashboard from "./pages/AdminDashboard"
+import AdminLogin from "./pages/AdminLogin"
+import AuthSuccess from "./pages/AuthSuccess"
+import VerifyEmail from "./pages/VerifyEmail"
+import ForgotPassword from "./pages/ForgotPassword"
+import ResetPassword from "./pages/ResetPassword"
+import PlantScanner from "./pages/PlantScanner"
+import Profile from "./pages/Profile"
 import { LanguageProvider } from "./context/LanguageContext"
 import { CartProvider } from "./context/CartContext"
 import { AuthProvider } from "./context/AuthContext"
 
 export default function App() {
-  useEffect(() => {
-    // Seed admin user automatically for testing
-    const seedAdmin = async () => {
-      try {
-        // Seed default admin
-        await fetch('http://localhost:5001/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fullName: 'Administrator',
-            email: 'admin',
-            password: 'admin',
-            role: 'admin'
-          })
-        });
-
-        // Seed Youssef's admin account
-        await fetch('http://localhost:5001/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fullName: 'youssefAdmin',
-            email: 'youssef@admin.com',
-            password: 'admin', // Mot de passe par défaut
-            role: 'admin'
-          })
-        });
-      } catch (e) { }
-    };
-    seedAdmin();
-  }, []);
-
   return (
     <LanguageProvider>
       <AuthProvider>
@@ -67,6 +41,11 @@ export default function App() {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/welcome" element={<Welcome />} />
+            <Route path="/auth-success" element={<AuthSuccess />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
 
             {/* Main pages with Header and background */}
@@ -91,6 +70,8 @@ export default function App() {
                   {/* Added /:id to AgroBot route to support chat persistence on refresh */}
                   <Route path="/AgroBot" element={<AgroBot />} />
                   <Route path="/AgroBot/:id" element={<AgroBot />} />
+                  <Route path="/scanner" element={<PlantScanner />} />
+                  <Route path="/profile" element={<Profile />} />
                 </Routes>
               </div>
             } />

@@ -37,14 +37,16 @@ const Header = () => {
             <nav className="hidden md:flex items-center gap-10">
                 <Link className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" to="/">{t('nav_home')}</Link>
                 <Link className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" to="/meteo">{t('nav_weather')}</Link>
-                <a className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" href="#">{t('nav_scanner')}</a>
+                <Link className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" to="/scanner">{t('nav_scanner')}</Link>
                 <Link className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" to="/AgroBot">{t('nav_bot')}</Link>
                 <Link className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" to="/marketplace">{t('nav_market')}</Link>
                 <a className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" href="/#download">{t('nav_app')}</a>
                 {user?.role === 'admin' && (
                     <Link className="text-lg font-black tracking-wide text-orange-600 transition-all duration-300 hover:text-orange-700 hover:scale-110" to="/admin">ADMIN</Link>
                 )}
-                <a className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" href="#">{t('nav_profile')}</a>
+                {user && (
+                    <Link className="text-lg font-medium tracking-wide text-gray-700 transition-all duration-300 hover:text-green-600 hover:scale-105" to="/profile">{t('nav_profile')}</Link>
+                )}
             </nav>
 
             <div className="flex items-center gap-6">
@@ -128,14 +130,16 @@ const Header = () => {
                 <nav className='flex flex-col gap-6 items-center'>
                     <Link className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" to="/" onClick={toggleMobileMenu}>{t('nav_home')}</Link>
                     <Link className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" to="/meteo" onClick={toggleMobileMenu}>{t('nav_weather')}</Link>
-                    <a className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" href="#">{t('nav_scanner')}</a>
+                    <Link className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" to="/scanner" onClick={toggleMobileMenu}>{t('nav_scanner')}</Link>
                     <Link className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" to="/AgroBot" onClick={toggleMobileMenu}>{t('nav_bot')}</Link>
                     <Link className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" to="/marketplace" onClick={toggleMobileMenu}>{t('nav_market')}</Link>
                     <a className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" href="/#download" onClick={toggleMobileMenu}>{t('nav_app')}</a>
                     {user?.role === 'admin' && (
                         <Link className="text-2xl font-black tracking-widest text-orange-400 hover:text-orange-300 transition-colors" to="/admin" onClick={toggleMobileMenu}>ADMIN DASHBOARD</Link>
                     )}
-                    <a className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" href="#">{t('nav_profile')}</a>
+                    {user && (
+                        <Link className="text-2xl font-light tracking-widest text-white hover:text-green-400 transition-colors" to="/profile" onClick={toggleMobileMenu}>{t('nav_profile')}</Link>
+                    )}
 
                     {/* Language Switcher Mobile */}
                     <div className="mt-4 flex flex-col items-center gap-4 py-4 border-t border-white/10 w-full max-w-[200px]">

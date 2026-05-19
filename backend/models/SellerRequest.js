@@ -4,6 +4,7 @@ const sellerRequestSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     companyName: { type: String, required: true },
     phone: { type: String, required: true },
+    productName: { type: String },
     productType: { type: String, required: true },
     description: { type: String },
     price: { type: String, required: true },

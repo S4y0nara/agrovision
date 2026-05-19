@@ -9,36 +9,30 @@ import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const FAQS = [
-    { q: 'How does plant diagnosis work?', a: 'Take a photo of your plant and our AI analyzes it for diseases, nutrient deficiencies, and pest damage within seconds.' },
-    { q: 'Is my data stored securely?', a: 'All your farm data and diagnoses are stored locally on your device and optionally synced with your account.' },
-    { q: 'Which crops does AgroVision support?', a: 'AgroVision supports over 50 crop types including wheat, tomatoes, corn, olives, grapes, and many more.' },
-    { q: 'Can I use AgroVision offline?', a: 'Basic features work offline. AI diagnosis and weather data require an internet connection.' },
-    { q: 'How accurate is the AI diagnosis?', a: 'Our AI model achieves over 90% accuracy on common plant diseases when a clear, well-lit photo is provided.' },
-];
-
-const CATEGORIES = ['Bug Report', 'Feature Request', 'Diagnosis Issue', 'Account Help', 'General Feedback'];
+const CATEGORY_KEYS = ['bug', 'feature', 'diagnosis', 'account', 'general'];
 
 export default function SupportScreen() {
     const { t } = useTranslation();
     const router = useRouter();
+    const faqs = [0, 1, 2, 3, 4].map(i => ({ q: t(`support.faq.${i}.q`), a: t(`support.faq.${i}.a`) }));
+    const categories = CATEGORY_KEYS.map(key => t(`support.categories.${key}`));
     const [openFaq, setOpenFaq] = useState<number | null>(null);
     const [feedbackName, setFeedbackName] = useState('');
-    const [feedbackCategory, setFeedbackCategory] = useState(CATEGORIES[4]);
+    const [feedbackCategory, setFeedbackCategory] = useState(categories[4]);
     const [feedbackMsg, setFeedbackMsg] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async () => {
         if (!feedbackMsg.trim()) {
-            Alert.alert('Empty Message', 'Please write your feedback before submitting.');
+            Alert.alert(t('support.emptyTitle'), t('support.emptyMessage'));
             return;
         }
         setSubmitting(true);
         try {
             const feedback = {
                 id: Date.now().toString(),
-                name: feedbackName.trim() || 'Anonymous',
+                name: feedbackName.trim() || t('support.anonymous'),
                 category: feedbackCategory,
                 message: feedbackMsg.trim(),
                 date: new Date().toISOString(),
@@ -51,7 +45,7 @@ export default function SupportScreen() {
             setFeedbackMsg('');
             setFeedbackName('');
         } catch (e) {
-            Alert.alert('Error', 'Could not save your feedback. Please try again.');
+            Alert.alert(t('common.error'), t('support.saveError'));
         } finally {
             setSubmitting(false);
         }
@@ -71,19 +65,19 @@ export default function SupportScreen() {
                         <View style={styles.heroIcon}>
                             <Ionicons name="help-buoy" size={40} color="#FFA000" />
                         </View>
-                        <Text style={styles.heroTitle}>Help & Support</Text>
-                        <Text style={styles.heroSub}>We're here to help you grow better</Text>
+                        <Text style={styles.heroTitle}>{t('support.title')}</Text>
+                        <Text style={styles.heroSub}>{t('support.subtitle')}</Text>
                     </LinearGradient>
 
                     {/* Quick Contact */}
                     <View style={styles.contactRow}>
                         <TouchableOpacity style={styles.contactCard}>
                             <Ionicons name="chatbubble-ellipses" size={24} color="#4CAF50" />
-                            <Text style={styles.contactLabel}>Live Chat</Text>
+                            <Text style={styles.contactLabel}>{t('support.liveChat')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.contactCard}>
                             <Ionicons name="mail" size={24} color="#2196F3" />
-                            <Text style={styles.contactLabel}>Email Us</Text>
+                            <Text style={styles.contactLabel}>{t('support.emailUs')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.contactCard}>
                             <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
@@ -93,8 +87,8 @@ export default function SupportScreen() {
 
                     {/* FAQs */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-                        {FAQS.map((faq, i) => (
+                        <Text style={styles.sectionTitle}>{t('support.faqTitle')}</Text>
+                        {faqs.map((faq, i) => (
                             <TouchableOpacity
                                 key={i}
                                 style={styles.faqItem}
@@ -118,33 +112,33 @@ export default function SupportScreen() {
 
                     {/* Feedback Form */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Send Feedback</Text>
+                        <Text style={styles.sectionTitle}>{t('support.sendFeedback')}</Text>
                         <View style={styles.card}>
                             {submitted ? (
                                 <View style={styles.successBox}>
                                     <View style={styles.successIcon}>
                                         <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
                                     </View>
-                                    <Text style={styles.successTitle}>Thank You! 🎉</Text>
-                                    <Text style={styles.successSub}>Your feedback has been recorded and helps us improve AgroVision.</Text>
+                                    <Text style={styles.successTitle}>{t('support.thankYou')}</Text>
+                                    <Text style={styles.successSub}>{t('support.successSub')}</Text>
                                     <TouchableOpacity style={styles.newFeedbackBtn} onPress={() => setSubmitted(false)}>
-                                        <Text style={styles.newFeedbackBtnText}>Send Another</Text>
+                                        <Text style={styles.newFeedbackBtnText}>{t('support.sendAnother')}</Text>
                                     </TouchableOpacity>
                                 </View>
                             ) : (
                                 <>
-                                    <Text style={styles.inputLabel}>Your Name (optional)</Text>
+                                    <Text style={styles.inputLabel}>{t('support.nameLabel')}</Text>
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="e.g. Youssef"
+                                        placeholder={t('support.namePlaceholder')}
                                         value={feedbackName}
                                         onChangeText={setFeedbackName}
                                         placeholderTextColor="#BBB"
                                     />
 
-                                    <Text style={styles.inputLabel}>Category</Text>
+                                    <Text style={styles.inputLabel}>{t('support.category')}</Text>
                                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-                                        {CATEGORIES.map(cat => (
+                                        {categories.map(cat => (
                                             <TouchableOpacity
                                                 key={cat}
                                                 style={[styles.categoryChip, feedbackCategory === cat && styles.categoryChipActive]}
@@ -157,10 +151,10 @@ export default function SupportScreen() {
                                         ))}
                                     </ScrollView>
 
-                                    <Text style={styles.inputLabel}>Your Message *</Text>
+                                    <Text style={styles.inputLabel}>{t('support.messageLabel')}</Text>
                                     <TextInput
                                         style={[styles.input, styles.textArea]}
-                                        placeholder="Describe your feedback, issue, or suggestion in detail..."
+                                        placeholder={t('support.messagePlaceholder')}
                                         value={feedbackMsg}
                                         onChangeText={setFeedbackMsg}
                                         multiline
@@ -175,7 +169,7 @@ export default function SupportScreen() {
                                         disabled={submitting}
                                     >
                                         <Ionicons name="send" size={18} color="#FFF" />
-                                        <Text style={styles.submitBtnText}>{submitting ? 'Sending...' : 'Submit Feedback'}</Text>
+                                        <Text style={styles.submitBtnText}>{submitting ? t('support.sending') : t('support.submit')}</Text>
                                     </TouchableOpacity>
                                 </>
                             )}
@@ -184,7 +178,7 @@ export default function SupportScreen() {
 
                     {/* Contact Info */}
                     <View style={[styles.section, { marginBottom: 110 }]}>
-                        <Text style={styles.sectionTitle}>Contact Information</Text>
+                        <Text style={styles.sectionTitle}>{t('support.contactInfo')}</Text>
                         <View style={styles.card}>
                             {[
                                 { icon: 'mail-outline', label: 'support@agrovision.ai', color: '#2196F3' },

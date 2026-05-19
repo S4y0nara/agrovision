@@ -20,7 +20,7 @@ export default function FarmProfileScreen({ onNext, onBack }: FarmProfileScreenP
 
     const handleNext = async () => {
         try {
-            const API_URL = 'http://192.168.1.15:5001';
+            const API_URL = 'https://jukebox-panorama-easing.ngrok-free.dev';
             const userId = await AsyncStorage.getItem('user_id');
 
             if (userId) {

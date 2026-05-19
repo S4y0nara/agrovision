@@ -7,6 +7,8 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
 
+import { API_URL } from '@/constants/api';
+
 const { width } = Dimensions.get('window');
 
 export default function WeatherScreen() {
@@ -87,12 +89,20 @@ export default function WeatherScreen() {
 
     const fetchWeather = async (latitude: number, longitude: number) => {
         try {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max&timezone=auto`;
-            const response = await fetch(url);
+            const url = `${API_URL}/api/weather?lat=${latitude}&lon=${longitude}`;
+            const response = await fetch(url, {
+                headers: {
+                    'ngrok-skip-browser-warning': 'true',
+                    'Accept': 'application/json',
+                }
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             setWeather(data);
         } catch (error) {
             console.error('Error fetching weather:', error);
+            const msg = 'Could not load weather data. Please try again.';
+            setLocationError(msg);
         }
     };
 

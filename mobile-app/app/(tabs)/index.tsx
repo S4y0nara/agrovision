@@ -12,7 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { DiagnosedPlant, STORAGE_KEYS, getSeverityLabel, parseStoredPlants } from '@/utils/appStorage';
 
 const { width } = Dimensions.get('window');
-const API_URL = 'http://192.168.1.15:5001';
+import { API_URL } from '@/constants/api';
 const IRRIGATION_PROMPT = 'Give me irrigation instructions for my plants, including when to water, how much water to use, and the best time of day to irrigate based on common crop care and current conditions.';
 
 export default function HomeScreen() {
@@ -53,7 +53,12 @@ export default function HomeScreen() {
 
   const fetchWeather = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/weather`);
+      const response = await fetch(`${API_URL}/api/weather`, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+          'Accept': 'application/json',
+        }
+      });
       const data = await response.json();
       setWeather(data);
     } catch (error) {
@@ -131,7 +136,7 @@ export default function HomeScreen() {
               <Text style={styles.widgetTitle}>{t('home.meteo')}</Text>
             </View>
             <View style={styles.weatherInfo}>
-              <Text style={styles.tempValue}>{weather ? `${Math.round(weather.current.temperature_2m)}°C` : '14°C'}</Text>
+              <Text style={styles.tempValue}>{weather ? `${Math.round(weather.current.temperature_2m)}Â°C` : '14Â°C'}</Text>
               <Text style={styles.weatherCondition}>
                 {weather ? (weather.current.is_day ? t('weather.conditions.daytime') : t('weather.conditions.nighttime')) : t('weather.conditions.sunny')}
               </Text>
@@ -312,3 +317,6 @@ const styles = StyleSheet.create({
   analyticsFooter: { marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F3F3F3', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   analyticsFooterText: { color: '#4E6E4E', fontWeight: '600' },
 });
+
+
+

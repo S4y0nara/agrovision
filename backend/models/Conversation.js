@@ -17,6 +17,11 @@ const messageSchema = new mongoose.Schema({
 });
 
 const conversationSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        index: true
+    },
     title: {
         type: String,
         default: 'New Conversation'

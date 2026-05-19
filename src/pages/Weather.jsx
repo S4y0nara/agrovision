@@ -3,11 +3,18 @@ import { useLanguage } from '../context/LanguageContext';
 
 const Weather = () => {
     const { t, lang } = useLanguage();
-    const [city, setCity] = useState('Marrakech');
+    const [city, setCity] = useState(t('weather_searching'));
     const [weather, setWeather] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchInput, setSearchInput] = useState('');
+
+    const fetchWeatherByCoords = async (latitude, longitude, label) => {
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum&timezone=auto`);
+        const weatherData = await weatherRes.json();
+        setCity(label);
+        setWeather(weatherData);
+    };
 
     const fetchWeather = async (cityName) => {
         setLoading(true);
@@ -23,10 +30,7 @@ const Weather = () => {
             const { latitude, longitude, name, country } = geoData.results[0];
             setCity(`${name}, ${country}`);
 
-            const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum&timezone=auto`);
-            const weatherData = await weatherRes.json();
-
-            setWeather(weatherData);
+            await fetchWeatherByCoords(latitude, longitude, `${name}, ${country}`);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -35,7 +39,44 @@ const Weather = () => {
     };
 
     useEffect(() => {
-        fetchWeather(city);
+        const loadLocalWeather = async () => {
+            setLoading(true);
+            setError(null);
+
+            const fallbackToIpLocation = async () => {
+                const res = await fetch('https://ipapi.co/json/');
+                const data = await res.json();
+                if (!data.latitude || !data.longitude) throw new Error('Location not found');
+                await fetchWeatherByCoords(data.latitude, data.longitude, `${data.city || 'Local area'}, ${data.country_name || ''}`.trim());
+            };
+
+            try {
+                if ('geolocation' in navigator) {
+                    await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, {
+                            enableHighAccuracy: true,
+                            timeout: 5000,
+                            maximumAge: 30 * 60 * 1000
+                        });
+                    }).then(async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        await fetchWeatherByCoords(latitude, longitude, lang === 'FR' ? 'Votre position actuelle' : 'Your current location');
+                    });
+                    return;
+                }
+                await fallbackToIpLocation();
+            } catch {
+                try {
+                    await fallbackToIpLocation();
+                } catch {
+                    await fetchWeather('Tunis');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLocalWeather();
     }, []);
 
     const handleSearch = (e) => {

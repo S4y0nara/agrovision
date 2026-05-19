@@ -4,10 +4,12 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -38,7 +40,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "home" : "home-outline"} size={26} color={color} />
           ),
@@ -47,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'AgroBot',
+          title: t('tabs.chat'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconCircle : null}>
               <MaterialCommunityIcons
@@ -62,7 +64,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="marketplace"
         options={{
-          title: 'Market',
+          title: t('tabs.market'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "cart" : "cart-outline"} size={26} color={color} />
           ),
@@ -71,7 +73,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "person" : "person-outline"} size={26} color={color} />
           ),

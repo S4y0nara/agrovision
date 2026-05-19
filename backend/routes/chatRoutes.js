@@ -2,10 +2,20 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Conversation = require('../models/Conversation');
-const Groq = require("groq-sdk");
+const Groq = require('groq-sdk');
+const authMiddleware = require('../middleware/authMiddleware');
+
+router.use(authMiddleware);
 
 // Initialize Groq
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let groq;
+const apiKey = process.env.GROQ_API_KEY;
+
+if (apiKey) {
+    groq = new Groq({ apiKey });
+} else {
+    console.warn('⚠️ GROQ_API_KEY is missing. Chat features will be disabled.');
+}
 
 const SYSTEM_INSTRUCTION = `You are AgroBot, a world-class AI agricultural consultant. Your mission is to provide expert-level, actionable, and scientific advice to farmers and agricultural enthusiasts.
 
@@ -28,7 +38,9 @@ Puisque le sol sablonneux draine rapidement, utilisez un système de **Goutte-à
 // GET History
 router.get('/history', async (req, res) => {
     try {
-        const history = await Conversation.find().sort({ updatedAt: -1 }).select('title updatedAt');
+        const history = await Conversation.find({
+            $or: [{ user: req.user._id }, { user: { $exists: false } }]
+        }).sort({ updatedAt: -1 }).select('title updatedAt');
         res.json(history);
     } catch (error) {
         console.error("History Error:", error);
@@ -36,10 +48,26 @@ router.get('/history', async (req, res) => {
     }
 });
 
+// DELETE all conversation history for the current user
+router.delete('/history/all', async (req, res) => {
+    try {
+        const result = await Conversation.deleteMany({
+            $or: [{ user: req.user._id }, { user: { $exists: false } }]
+        });
+        res.json({ success: true, deletedCount: result.deletedCount });
+    } catch (error) {
+        console.error("Clear history error:", error);
+        res.status(500).json({ error: 'Failed to clear history' });
+    }
+});
+
 // GET Conversation
 router.get('/:id', async (req, res) => {
     try {
-        const conversation = await Conversation.findById(req.params.id);
+        const conversation = await Conversation.findOne({
+            _id: req.params.id,
+            $or: [{ user: req.user._id }, { user: { $exists: false } }]
+        });
         if (!conversation) return res.status(404).json({ error: 'Not found' });
         res.json(conversation);
     } catch (error) {
@@ -51,7 +79,10 @@ router.get('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     console.log(`-> Deleting conversation: ${req.params.id}`);
     try {
-        await Conversation.findByIdAndDelete(req.params.id);
+        await Conversation.findOneAndDelete({
+            _id: req.params.id,
+            $or: [{ user: req.user._id }, { user: { $exists: false } }]
+        });
         console.log(`✅ Deleted successfully: ${req.params.id}`);
         res.json({ success: true });
     } catch (error) {
@@ -60,7 +91,7 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// POST Message (DIRECT API FLOW)
+// POST Message (GROQ AI FLOW)
 router.post('/', async (req, res) => {
     console.log("-> Incoming request to /api/chat");
     const { message, conversationId } = req.body;
@@ -76,15 +107,21 @@ router.post('/', async (req, res) => {
         if (isDbConnected && conversationId) {
             conversation = await Conversation.findById(conversationId);
             if (!conversation) return res.status(404).json({ error: 'Chat not found' });
+            if (conversation.user && String(conversation.user) !== String(req.user._id)) {
+                return res.status(403).json({ error: 'Forbidden' });
+            }
+            if (!conversation.user) conversation.user = req.user._id;
 
+            // Map stored messages to Groq's OpenAI-compatible format
             chatHistory = conversation.messages
                 .filter(m => m.role !== 'system')
                 .map(m => ({
-                    role: m.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: m.content }]
+                    role: m.role === 'user' ? 'user' : 'assistant',
+                    content: m.content
                 }));
         } else if (isDbConnected) {
             conversation = new Conversation({
+                user: req.user._id,
                 title: message.substring(0, 30) + (message.length > 30 ? '...' : ''),
                 messages: []
             });
@@ -94,23 +131,39 @@ router.post('/', async (req, res) => {
             conversation.messages.push({ role: 'user', content: message });
         }
 
-        // Build Groq messages with chat history
+        // Language detection
+        const userLanguage = req.body.language || 'fr'; // default to French if not provided
+        let languagePrompt = '';
+        if (userLanguage === 'fr') {
+            languagePrompt = "You are AgroBot, an agricultural assistant. Always respond in French.";
+        } else if (userLanguage === 'ar') {
+            languagePrompt = "You are AgroBot, an agricultural assistant. Always respond in Arabic.";
+        } else if (userLanguage === 'en') {
+            languagePrompt = "You are AgroBot, an agricultural assistant. Always respond in English.";
+        } else {
+            languagePrompt = "You are AgroBot, an agricultural assistant. Always respond in French.";
+        }
+
+        const DYNAMIC_INSTRUCTION = `${SYSTEM_INSTRUCTION}\n${languagePrompt}`;
+
+        // Build Groq messages array: system prompt first, then history, then current message
         const groqMessages = [
-            { role: 'system', content: SYSTEM_INSTRUCTION },
-            ...chatHistory.map(m => ({
-                role: m.role === 'model' ? 'assistant' : m.role,
-                content: m.parts[0].text
-            })),
+            { role: 'system', content: DYNAMIC_INSTRUCTION },
+            ...chatHistory,
             { role: 'user', content: message }
         ];
 
-        console.log("-> Calling Groq API...");
-        const completion = await groq.chat.completions.create({
+        if (!groq) {
+            throw new Error("GROQ_API_KEY_MISSING");
+        }
+
+        console.log(`-> Calling Groq AI... (Responding in ${userLanguage})`);
+        const response = await groq.chat.completions.create({
             model: 'llama-3.3-70b-versatile',
-            messages: groqMessages,
-            max_tokens: 2000,
+            messages: groqMessages
         });
-        const aiReply = completion.choices[0].message.content;
+
+        const aiReply = response.choices[0].message.content;
         console.log("-> Groq responded successfully.");
 
         if (isDbConnected) {
@@ -125,10 +178,10 @@ router.post('/', async (req, res) => {
         });
 
     } catch (error) {
-        console.error("!!! API ERROR:", error.message);
+        console.error("!!! GROQ API ERROR:", error.message);
         res.status(500).json({
             error: "Service indisponible",
-            message: "L'IA ne répond pas pour le moment. Vérifiez votre clé API ou quota."
+            message: "L'IA AgroBot ne répond pas pour le moment. Vérifiez votre clé API ou connexion."
         });
     }
 });

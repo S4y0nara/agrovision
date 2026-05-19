@@ -14,6 +14,12 @@
         "tomorrow": "Tomorrow",
         "language": "Language"
     },
+    "tabs": {
+        "home": "Home",
+        "chat": "AgroBot",
+        "market": "Market",
+        "profile": "Profile"
+    },
     "home": {
         "greeting": "Aslama,",
         "plantDoctor": "Plant Doctor",
@@ -40,6 +46,17 @@
         "trustedBrands": "Trusted Brands",
         "addToCart": "Add to Cart",
         "addedToCart": "Added to cart!",
+        "noProducts": "No products found",
+        "products": "Products",
+        "sell": "Sell",
+        "sellProduct": "Sell a Product",
+        "productName": "Product Name",
+        "price": "Price (DT)",
+        "stock": "Stock",
+        "description": "Description",
+        "publish": "Publish Product",
+        "onlyLeft": "Only {{count}} left",
+        "inStock": "{{count}} in stock",
         "categories": {
             "all": "All",
             "fertilizers": "Fertilizers",
@@ -96,6 +113,43 @@
         "restartRTL": "Language changed. Please restart the app for full RTL support.",
         "statsSub": "Detailed analytics coming soon in the Expert Plan.",
         "supportSub": "Need help? Contact our agro-experts via AgroBot chat."
+    },
+    "support": {
+        "title": "Help & Support",
+        "subtitle": "We're here to help you grow better",
+        "liveChat": "Live Chat",
+        "emailUs": "Email Us",
+        "faqTitle": "Frequently Asked Questions",
+        "sendFeedback": "Send Feedback",
+        "emptyTitle": "Empty Message",
+        "emptyMessage": "Please write your feedback before submitting.",
+        "anonymous": "Anonymous",
+        "saveError": "Could not save your feedback. Please try again.",
+        "thankYou": "Thank you!",
+        "successSub": "Your feedback has been recorded and helps us improve AgroVision.",
+        "sendAnother": "Send Another",
+        "nameLabel": "Your Name (optional)",
+        "namePlaceholder": "e.g. Youssef",
+        "category": "Category",
+        "messageLabel": "Your Message *",
+        "messagePlaceholder": "Describe your feedback, issue, or suggestion in detail...",
+        "sending": "Sending...",
+        "submit": "Submit Feedback",
+        "contactInfo": "Contact Information",
+        "categories": {
+            "bug": "Bug Report",
+            "feature": "Feature Request",
+            "diagnosis": "Diagnosis Issue",
+            "account": "Account Help",
+            "general": "General Feedback"
+        },
+        "faq": {
+            "0": { "q": "How does plant diagnosis work?", "a": "Take a photo of your plant and our AI analyzes it for diseases, nutrient deficiencies, and pest damage within seconds." },
+            "1": { "q": "Is my data stored securely?", "a": "All your farm data and diagnoses are stored locally on your device and optionally synced with your account." },
+            "2": { "q": "Which crops does AgroVision support?", "a": "AgroVision supports over 50 crop types including wheat, tomatoes, corn, olives, grapes, and many more." },
+            "3": { "q": "Can I use AgroVision offline?", "a": "Basic features work offline. AI diagnosis and weather data require an internet connection." },
+            "4": { "q": "How accurate is the AI diagnosis?", "a": "Our AI model achieves over 90% accuracy on common plant diseases when a clear, well-lit photo is provided." }
+        }
     },
     "diagnosis": {
         "diseaseDetected": "Disease Detected",

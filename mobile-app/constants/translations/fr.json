@@ -14,6 +14,12 @@
         "tomorrow": "Demain",
         "language": "Langue"
     },
+    "tabs": {
+        "home": "Accueil",
+        "chat": "AgroBot",
+        "market": "Marché",
+        "profile": "Profil"
+    },
     "home": {
         "greeting": "Aslema,",
         "plantDoctor": "Docteur des Plantes",
@@ -39,6 +45,17 @@
         "recommended": "Recommandé pour vous",
         "trustedBrands": "Marques de confiance",
         "addToCart": "Ajouter au panier",
+        "noProducts": "Aucun produit trouvé",
+        "products": "Produits",
+        "sell": "Vendre",
+        "sellProduct": "Vendre un produit",
+        "productName": "Nom du produit",
+        "price": "Prix (DT)",
+        "stock": "Stock",
+        "description": "Description",
+        "publish": "Publier le produit",
+        "onlyLeft": "Plus que {{count}}",
+        "inStock": "{{count}} en stock",
         "addedToCart": "Ajouté au panier !",
         "categories": {
             "all": "Tout",
@@ -96,6 +113,43 @@
         "restartRTL": "Langue changée. Veuillez redémarrer l'application pour un support RTL complet.",
         "statsSub": "Analyses détaillées bientôt disponibles dans le Plan Expert.",
         "supportSub": "Besoin d'aide ? Contactez nos agro-experts via le chat AgroBot."
+    },
+    "support": {
+        "title": "Aide & Support",
+        "subtitle": "Nous sommes là pour vous aider à mieux cultiver",
+        "liveChat": "Chat en direct",
+        "emailUs": "Nous écrire",
+        "faqTitle": "Questions fréquentes",
+        "sendFeedback": "Envoyer un retour",
+        "emptyTitle": "Message vide",
+        "emptyMessage": "Veuillez écrire votre message avant de l'envoyer.",
+        "anonymous": "Anonyme",
+        "saveError": "Impossible d'enregistrer votre retour. Veuillez réessayer.",
+        "thankYou": "Merci !",
+        "successSub": "Votre retour a été enregistré et nous aide à améliorer AgroVision.",
+        "sendAnother": "Envoyer un autre",
+        "nameLabel": "Votre nom (optionnel)",
+        "namePlaceholder": "ex. Youssef",
+        "category": "Catégorie",
+        "messageLabel": "Votre message *",
+        "messagePlaceholder": "Décrivez votre retour, problème ou suggestion en détail...",
+        "sending": "Envoi...",
+        "submit": "Envoyer",
+        "contactInfo": "Informations de contact",
+        "categories": {
+            "bug": "Bug",
+            "feature": "Demande de fonctionnalité",
+            "diagnosis": "Problème de diagnostic",
+            "account": "Aide compte",
+            "general": "Retour général"
+        },
+        "faq": {
+            "0": { "q": "Comment fonctionne le diagnostic des plantes ?", "a": "Prenez une photo de votre plante et notre IA l'analyse pour détecter maladies, carences et dégâts de parasites en quelques secondes." },
+            "1": { "q": "Mes données sont-elles sécurisées ?", "a": "Vos données de ferme et diagnostics sont stockés localement sur votre appareil et peuvent être synchronisés avec votre compte." },
+            "2": { "q": "Quelles cultures AgroVision prend-il en charge ?", "a": "AgroVision prend en charge plus de 50 cultures dont le blé, les tomates, le maïs, les olives et les raisins." },
+            "3": { "q": "Puis-je utiliser AgroVision hors ligne ?", "a": "Les fonctions de base marchent hors ligne. Le diagnostic IA et la météo nécessitent une connexion internet." },
+            "4": { "q": "Quelle est la précision du diagnostic IA ?", "a": "Notre modèle dépasse 90% de précision sur les maladies courantes quand la photo est nette et bien éclairée." }
+        }
     },
     "diagnosis": {
         "diseaseDetected": "Maladie détectée",

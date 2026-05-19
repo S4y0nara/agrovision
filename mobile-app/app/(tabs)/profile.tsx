@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAppFlow } from '@/hooks/AppFlowContext';
+import { API_URL } from '@/constants/api';
 
 export default function ProfileScreen() {
     const { t } = useTranslation();
@@ -18,6 +19,7 @@ export default function ProfileScreen() {
         name: 'User',
         email: 'user@example.com',
         location: 'Location',
+        role: 'user',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop'
     });
 
@@ -30,12 +32,28 @@ export default function ProfileScreen() {
             const name = await AsyncStorage.getItem('user_name');
             const email = await AsyncStorage.getItem('user_email');
             const loc = await AsyncStorage.getItem('farm_location');
+            let role = await AsyncStorage.getItem('user_role');
+            const token = await AsyncStorage.getItem('user_token');
+
+            if (!role && token) {
+                try {
+                    const response = await fetch(`${API_URL}/api/auth/me`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    const data = await response.json();
+                    role = data?.user?.role || data?.role || null;
+                    if (role) await AsyncStorage.setItem('user_role', role);
+                } catch {
+                    role = null;
+                }
+            }
 
             setProfile((prev) => ({
                 ...prev,
                 name: name || prev.name,
                 email: email || prev.email,
-                location: loc || prev.location
+                location: loc || prev.location,
+                role: role || prev.role
             }));
         } catch (error) {
             console.error('Error loading profile:', error);
@@ -55,7 +73,7 @@ export default function ProfileScreen() {
                         try {
                             const keys = [
                                 'user_name', 'user_email', 'farm_name', 'farm_location', 'farm_size',
-                                'user_id', 'user_token', 'diagnosed_plants'
+                                'user_id', 'user_token', 'user_role', 'diagnosed_plants'
                             ];
                             await AsyncStorage.multiRemove(keys);
                             resetToSplash();
@@ -69,7 +87,9 @@ export default function ProfileScreen() {
     };
 
     const menuItems = [
-        { icon: 'leaf', label: t('profile.myFarmDetails'), color: '#4CAF50', route: '/farm-details' },
+        ...(profile.role === 'admin'
+            ? [{ icon: 'shield-checkmark', label: 'Admin Console', color: '#0F766E', route: '/admin' }]
+            : []),
         { icon: 'analytics', label: t('profile.harvestStats'), color: '#2196F3', route: '/analytics' },
         { icon: 'help-circle', label: t('profile.supportHelp'), color: '#FFA000', route: '/support' },
         { icon: 'language', label: 'Language', color: '#5C6BC0', route: '/language' },

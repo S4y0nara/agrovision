@@ -10,6 +10,8 @@ const productSchema = new mongoose.Schema({
     isOffer: { type: Boolean, default: false },
     discount: { type: String },
     stock: { type: Number, default: 10 },
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);
+

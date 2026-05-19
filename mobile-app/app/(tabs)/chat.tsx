@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Message {
     id: string;
@@ -13,10 +14,11 @@ interface Message {
     timestamp: Date;
 }
 
-const API_URL = 'http://192.168.1.15:5001';
+import { API_URL } from '@/constants/api';
 
 export default function ChatScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const insets = useSafeAreaInsets();
     const params = useLocalSearchParams<{ prompt?: string | string[] }>();
     const [messages, setMessages] = useState<Message[]>([
         { id: '1', text: t('chat.welcome'), sender: 'bot', timestamp: new Date() }
@@ -42,10 +44,17 @@ export default function ChatScreen() {
         setIsLoading(true);
 
         try {
+            const token = await AsyncStorage.getItem('user_token');
             const response = await fetch(`${API_URL}/api/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMessage.text }),
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    message: userMessage.text,
+                    language: i18n.language ? i18n.language.toLowerCase() : 'fr'
+                }),
             });
 
             const data = await response.json();
@@ -104,47 +113,49 @@ export default function ChatScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
             <StatusBar style="dark" />
-            <View style={styles.header}>
-                <View style={styles.botInfo}>
-                    <View style={styles.avatar}>
-                        <MaterialCommunityIcons name="robot" size={24} color="#FFF" />
-                    </View>
-                    <View>
-                        <Text style={styles.botName}>AgroBot</Text>
-                        <View style={styles.statusRow}>
-                            <View style={styles.statusDot} />
-                            <Text style={styles.statusText}>{t('chat.online')}</Text>
+            <KeyboardAvoidingView
+                style={styles.keyboardView}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={0}
+            >
+                <View style={styles.header}>
+                    <View style={styles.botInfo}>
+                        <View style={styles.avatar}>
+                            <MaterialCommunityIcons name="robot" size={24} color="#FFF" />
+                        </View>
+                        <View>
+                            <Text style={styles.botName}>AgroBot</Text>
+                            <View style={styles.statusRow}>
+                                <View style={styles.statusDot} />
+                                <Text style={styles.statusText}>{t('chat.online')}</Text>
+                            </View>
                         </View>
                     </View>
+                    <TouchableOpacity>
+                        <Ionicons name="ellipsis-vertical" size={24} color="#333" />
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity>
-                    <Ionicons name="ellipsis-vertical" size={24} color="#333" />
-                </TouchableOpacity>
-            </View>
 
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                renderItem={renderMessage}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.messageList}
-                showsVerticalScrollIndicator={false}
-            />
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    renderItem={renderMessage}
+                    keyExtractor={item => item.id}
+                    contentContainerStyle={[styles.messageList, { paddingBottom: 16 }]}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                />
 
-            {isLoading && (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#4CAF50" />
-                    <Text style={styles.loadingText}>{t('chat.thinking')}</Text>
-                </View>
-            )}
+                {isLoading && (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color="#4CAF50" />
+                        <Text style={styles.loadingText}>{t('chat.thinking')}</Text>
+                    </View>
+                )}
 
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-            >
-                <View style={styles.inputContainer}>
+                <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom + 10, 14) }]}>
                     <TextInput
                         style={styles.input}
                         placeholder={t('chat.placeholder')}
@@ -167,6 +178,7 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
+    keyboardView: { flex: 1 },
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#FFF', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
     botInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center' },
@@ -174,7 +186,7 @@ const styles = StyleSheet.create({
     statusRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
     statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4CAF50' },
     statusText: { fontSize: 12, color: '#777' },
-    messageList: { padding: 20, paddingBottom: 20 },
+    messageList: { padding: 20 },
     messageBubble: { maxWidth: '80%', padding: 15, borderRadius: 20, marginBottom: 15, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
     userBubble: { alignSelf: 'flex-end', backgroundColor: '#4CAF50', borderBottomRightRadius: 5 },
     botBubble: { alignSelf: 'flex-start', backgroundColor: '#FFF', borderBottomLeftRadius: 5 },
@@ -184,7 +196,7 @@ const styles = StyleSheet.create({
     timestamp: { fontSize: 10, color: 'rgba(0,0,0,0.4)', alignSelf: 'flex-end', marginTop: 5 },
     loadingContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, gap: 10 },
     loadingText: { fontSize: 13, color: '#777', fontStyle: 'italic' },
-    inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#EEE', paddingBottom: Platform.OS === 'ios' ? 100 : 80 },
+    inputContainer: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 15, paddingTop: 12, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#EEE' },
     input: { flex: 1, backgroundColor: '#F0F2F5', borderRadius: 25, paddingHorizontal: 20, paddingVertical: 10, marginRight: 10, fontSize: 15, maxHeight: 100 },
     sendButton: { width: 45, height: 45, borderRadius: 22.5, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', elevation: 3 },
     sendButtonDisabled: { backgroundColor: '#A5D6A7' },

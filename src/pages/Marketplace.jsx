@@ -7,8 +7,8 @@ import { useAuth } from '../context/AuthContext';
 const Marketplace = () => {
     const { t, lang } = useLanguage();
     const navigate = useNavigate();
-    const { addToCart, toggleFavorite, favorites, cartItems, cartCount, cartTotal, removeFromCart, updateQuantity } = useCart();
-    const { user } = useAuth();
+    const { addToCart, toggleFavorite, favorites, cartItems, cartCount, cartTotal, removeFromCart, updateQuantity, clearCart } = useCart();
+    const { user, token, login } = useAuth();
 
     const handleProtectedAction = (action) => {
         if (!user) {
@@ -22,6 +22,9 @@ const Marketplace = () => {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [showOnlyOffers, setShowOnlyOffers] = useState(false);
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [paymentData, setPaymentData] = useState({ name: '', card: '', expiry: '', cvc: '', address: '' });
+    const [paymentLoading, setPaymentLoading] = useState(false);
 
     // State for local products fetched from DB
     const [dbProducts, setDbProducts] = useState([]);
@@ -73,6 +76,44 @@ const Marketplace = () => {
     });
 
     const isFavorite = (id) => favorites.some(fav => fav._id === id || fav.id === id);
+    const sellerButtonLabel = user?.role === 'seller'
+        ? (lang === 'FR' ? 'Vendre un produit' : lang === 'AR' ? 'بيع منتج' : 'Sell a product')
+        : t('market_seller');
+
+    const submitPayment = async (e) => {
+        e.preventDefault();
+        const cardDigits = paymentData.card.replace(/\D/g, '');
+        if (cardDigits.length < 12 || !paymentData.name.trim() || !paymentData.expiry.trim() || paymentData.cvc.replace(/\D/g, '').length < 3) {
+            alert(lang === 'FR' ? 'Veuillez remplir correctement les informations de carte.' : 'Please fill the card details correctly.');
+            return;
+        }
+
+        setPaymentLoading(true);
+        try {
+            const response = await fetch('http://localhost:5001/api/user/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                    items: cartItems.map(item => ({ product: item._id || item.id, quantity: item.quantity, price: item.price })),
+                    totalAmount: cartTotal,
+                    cardLast4: cardDigits.slice(-4),
+                    paymentMethod: `Card ending ${cardDigits.slice(-4)}`,
+                    shippingAddress: paymentData.address
+                })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Payment failed');
+            clearCart();
+            setIsPaymentOpen(false);
+            setIsCartOpen(false);
+            setPaymentData({ name: '', card: '', expiry: '', cvc: '', address: '' });
+            alert(lang === 'FR' ? 'Paiement accepté. Votre commande est confirmée.' : 'Payment accepted. Your order is confirmed.');
+        } catch (err) {
+            alert(err.message || (lang === 'FR' ? 'Paiement impossible pour le moment.' : 'Payment could not be completed.'));
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
 
     return (
         <div className="pt-32 min-h-screen bg-slate-50/50 pb-20">
@@ -115,7 +156,7 @@ const Marketplace = () => {
                                 onClick={() => handleProtectedAction(() => setIsSellerModalOpen(true))}
                                 className="bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-2xl transition-all border border-white/10 backdrop-blur-md"
                             >
-                                {t('market_seller')}
+                                {sellerButtonLabel}
                             </button>
                         </div>
                     </div>
@@ -128,12 +169,12 @@ const Marketplace = () => {
             {/* Filters */}
             <div className="max-w-[98%] lg:max-w-[1650px] mx-auto px-6 mb-12">
                 <div className={`flex flex-col md:flex-row justify-between items-center gap-8 ${lang === 'AR' ? 'md:flex-row-reverse' : ''}`}>
-                    <div className={`flex gap-2 p-1.5 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-x-auto max-w-full no-scrollbar ${lang === 'AR' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex gap-2 p-1.5 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-x-auto max-w-full no-scrollbar ${lang === 'AR' ? 'flex-row-reverse' : ''}`}>
                         {categories.map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`px-6 py-3 rounded-[1.25rem] text-sm font-bold transition-all whitespace-nowrap ${selectedCategory === cat
+                                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${selectedCategory === cat
                                     ? 'bg-[#1DB954] text-white shadow-lg shadow-green-500/20'
                                     : 'text-slate-500 hover:bg-slate-50'
                                     }`}
@@ -184,6 +225,7 @@ const Marketplace = () => {
                                         )}
                                     </div>
                                     <button
+                                        onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); handleProtectedAction(() => setIsPaymentOpen(true)); }}
                                         onClick={() => handleProtectedAction(() => addToCart(product))}
                                         className={`absolute bottom-4 ${lang === 'AR' ? 'left-4' : 'right-4'} w-12 h-12 bg-[#1DB954] text-white rounded-2xl flex items-center justify-center opacity-0 translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 shadow-xl shadow-green-500/20 active:scale-95`}
                                     >
@@ -289,32 +331,39 @@ const Marketplace = () => {
                                 }
 
                                 const formData = new FormData(e.currentTarget);
-                                formData.append('userId', user.id);
-
                                 try {
-                                    const response = await fetch('http://localhost:5001/api/seller/request', {
+                                    const response = await fetch('http://localhost:5001/api/seller/products', {
                                         method: 'POST',
+                                        headers: {
+                                            Authorization: `Bearer ${token}`
+                                        },
                                         body: formData
                                     });
+                                    const data = await response.json();
                                     if (response.ok) {
-                                        alert(lang === 'AR' ? 'تم تقديم الطلب بنجاح!' : 'Demande envoyée avec succès !');
+                                        if (data.user && token) login(data.user, token);
+                                        alert(lang === 'AR'
+                                            ? 'تم إرسال المنتج للمراجعة. سيظهر في السوق بعد موافقة المسؤول.'
+                                            : lang === 'FR'
+                                                ? 'Produit envoyé pour validation. Il sera publié après approbation admin.'
+                                                : 'Product submitted for review. It will be published after admin approval.');
                                         setIsSellerModalOpen(false);
                                         setSelectedFileName(''); // Reset
                                     } else {
-                                        alert('Error submitting request');
+                                        alert(data.message || 'Error publishing product');
                                     }
-                                } catch (err) {
+                                } catch {
                                     alert('Server error');
                                 }
                             }}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-slate-700 ml-2">{lang === 'AR' ? 'اسم الشركة' : "Nom de l'entreprise"}</label>
-                                        <input type="text" name="companyName" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 outline-none transition-all" />
+                                        <input type="text" name="name" required placeholder="Product name" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 outline-none transition-all" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-slate-700 ml-2">{lang === 'AR' ? 'رقم الهاتف' : 'Téléphone'}</label>
-                                        <input type="tel" name="phone" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 outline-none transition-all" />
+                                        <input type="text" name="category" required placeholder="Seeds, tools, harvest, equipment..." className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 outline-none transition-all" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-slate-700 ml-2">{lang === 'AR' ? 'السعر (DT)' : 'Prix (DT)'}</label>
@@ -359,7 +408,7 @@ const Marketplace = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700 ml-2">{lang === 'AR' ? 'وصف النشاط' : "Description de l'activité"}</label>
-                                    <textarea name="description" rows="4" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 outline-none transition-all"></textarea>
+                                    <textarea name="description" rows="4" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 outline-none transition-all"></textarea>
                                 </div>
                                 <button type="submit" className="w-full py-5 bg-[#1DB954] text-white font-black text-lg rounded-2xl shadow-xl shadow-green-500/20 hover:bg-[#17a34a] transition-all transform active:scale-[0.98]">
                                     {lang === 'AR' ? 'إرسال الطلب' : 'Envoyer ma demande'}
@@ -448,6 +497,64 @@ const Marketplace = () => {
                     </div>
                 )
             }
+            {isPaymentOpen && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={() => setIsPaymentOpen(false)}></div>
+                    <form onSubmit={submitPayment} className="relative bg-white w-full max-w-lg rounded-[2rem] shadow-2xl p-8 space-y-5">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-xs font-black tracking-widest uppercase text-[#1DB954]">{lang === 'FR' ? 'Paiement sécurisé' : 'Secure payment'}</p>
+                                <h2 className="text-2xl font-black text-slate-900 mt-1">{cartTotal.toFixed(2)} {t('market_unit')}</h2>
+                            </div>
+                            <button type="button" onClick={() => setIsPaymentOpen(false)} className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 hover:text-red-500">
+                                <i className='bx bx-x text-2xl'></i>
+                            </button>
+                        </div>
+
+                        <input
+                            required
+                            value={paymentData.name}
+                            onChange={(e) => setPaymentData(p => ({ ...p, name: e.target.value }))}
+                            placeholder={lang === 'FR' ? 'Nom sur la carte' : 'Name on card'}
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#1DB954]"
+                        />
+                        <input
+                            required
+                            inputMode="numeric"
+                            value={paymentData.card}
+                            onChange={(e) => setPaymentData(p => ({ ...p, card: e.target.value.replace(/[^\d ]/g, '').slice(0, 19) }))}
+                            placeholder="4242 4242 4242 4242"
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#1DB954]"
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                            <input
+                                required
+                                value={paymentData.expiry}
+                                onChange={(e) => setPaymentData(p => ({ ...p, expiry: e.target.value.slice(0, 5) }))}
+                                placeholder="MM/YY"
+                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#1DB954]"
+                            />
+                            <input
+                                required
+                                inputMode="numeric"
+                                value={paymentData.cvc}
+                                onChange={(e) => setPaymentData(p => ({ ...p, cvc: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                                placeholder="CVC"
+                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#1DB954]"
+                            />
+                        </div>
+                        <input
+                            value={paymentData.address}
+                            onChange={(e) => setPaymentData(p => ({ ...p, address: e.target.value }))}
+                            placeholder={lang === 'FR' ? 'Adresse de livraison' : 'Delivery address'}
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#1DB954]"
+                        />
+                        <button disabled={paymentLoading} className="w-full py-4 rounded-2xl bg-[#1DB954] text-white font-black disabled:opacity-60">
+                            {paymentLoading ? (lang === 'FR' ? 'Traitement...' : 'Processing...') : (lang === 'FR' ? 'Payer et confirmer' : 'Pay and confirm')}
+                        </button>
+                    </form>
+                </div>
+            )}
         </div >
     );
 };

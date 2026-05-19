@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 const AuthContext = createContext();
 
@@ -15,22 +15,24 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, [token]);
 
-    const login = (userData, userToken) => {
+    const login = useCallback((userData, userToken) => {
         setUser(userData);
         setToken(userToken);
         localStorage.setItem('agrovision_token', userToken);
         localStorage.setItem('agrovision_user', JSON.stringify(userData));
-    };
+    }, []);
 
-    const logout = () => {
+    const logout = useCallback(() => {
         setUser(null);
         setToken(null);
         localStorage.removeItem('agrovision_token');
         localStorage.removeItem('agrovision_user');
-    };
+    }, []);
+
+    const value = useMemo(() => ({ user, token, login, logout, loading }), [user, token, login, logout, loading]);
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

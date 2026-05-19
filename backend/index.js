@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const passport = require('./config/passport');
 const chatRoutes = require('./routes/chatRoutes');
 const productRoutes = require('./routes/productRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -9,6 +11,9 @@ const sellerRoutes = require('./routes/sellerRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const weatherRoutes = require('./routes/weatherRoutes');
+const diseaseRoutes = require('./routes/diseaseRoutes');
+const scanRoutes = require('./routes/scanRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -26,6 +31,14 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+app.use(session({
+    secret: process.env.SECRET_KEY || 'mysecret123',
+    resave: false,
+    saveUninitialized: false,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Routes
 app.use('/api/chat', chatRoutes);
 app.use('/api/products', productRoutes);
@@ -34,6 +47,9 @@ app.use('/api/seller', sellerRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/weather', weatherRoutes);
+app.use('/api/disease', diseaseRoutes);
+app.use('/api/scans', scanRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Handle unhandled promise rejections (like MongoDB SRV issues)
 process.on('unhandledRejection', (reason, promise) => {
@@ -68,13 +84,13 @@ const connectDB = async () => {
     const { uri, opts } = getMongoConnectArgs();
     try {
         await mongoose.connect(uri, opts);
-        console.log('MongoDB connected successfully ya 5chin');
+        console.log('✅ MongoDB connected successfully');
     } catch (err) {
-        console.error('MongoDB connection error:', err.message);
+        console.error('❌ MongoDB connection error:', err.message);
         if (String(err.message).includes('bad auth')) {
-            console.log('In Atlas → Database Access: confirm username (Youssef) and password match backend/.env; user must have "Read and write to any database" or built-in role.');
+            console.log('💡 In Atlas → Database Access: confirm username (Youssef) and password match backend/.env; user must have "Read and write to any database" or built-in role.');
         }
-        console.log('Running in offline-first mode (some features may be limited)');
+        console.log('⚠️ Running in offline-first mode (some features may be limited)');
     }
 };
 
@@ -87,5 +103,5 @@ app.get('/', (req, res) => {
 
 // Start Server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

@@ -15,6 +15,7 @@ import FarmProfileScreen from '@/components/FarmProfileScreen';
 import GoalsScreen from '@/components/GoalsScreen';
 import OnboardingScreen from '@/components/OnboardingScreen';
 import SignUpScreen from '@/components/SignUpScreen';
+import LoginScreen from '@/components/LoginScreen';
 import SplashScreen from '@/components/SplashScreen';
 
 ExpoSplashScreen.preventAutoHideAsync();
@@ -23,7 +24,7 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-type AppStage = 'loading' | 'splash' | 'onboarding' | 'signup' | 'farm' | 'goals' | 'app';
+type AppStage = 'loading' | 'splash' | 'onboarding' | 'signup' | 'login' | 'farm' | 'goals' | 'app';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -54,7 +55,7 @@ export default function RootLayout() {
         return (
           <OnboardingScreen
             onGetStarted={() => setStage('signup')}
-            onSignIn={() => setStage('signup')}
+            onSignIn={() => setStage('login')}
           />
         );
       case 'signup':
@@ -62,6 +63,14 @@ export default function RootLayout() {
           <SignUpScreen
             onNext={() => setStage('farm')}
             onBack={() => setStage('onboarding')}
+          />
+        );
+      case 'login':
+        return (
+          <LoginScreen
+            onLoginSuccess={() => setStage('app')}
+            onBack={() => setStage('onboarding')}
+            onGoToSignUp={() => setStage('signup')}
           />
         );
       case 'farm':
@@ -88,6 +97,7 @@ export default function RootLayout() {
             <Stack.Screen name="support" options={{ headerShown: false }} />
             <Stack.Screen name="farm-details" options={{ headerShown: false }} />
             <Stack.Screen name="stats" options={{ headerShown: false }} />
+            <Stack.Screen name="admin" options={{ headerShown: false }} />
             <Stack.Screen name="notifications" options={{ presentation: 'modal', title: 'Notifications' }} />
             <Stack.Screen name="diagnosis" options={{ headerShown: false }} />
             <Stack.Screen name="weather" options={{ headerShown: false }} />
