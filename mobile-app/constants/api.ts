@@ -2,7 +2,7 @@
 // IMPORTANT: Si vous testez sur un appareil physique, assurez-vous que votre PC et votre téléphone
 // sont sur le même réseau WiFi, et remplacez cette adresse IP par celle de votre ordinateur (IPv4).
 
-export const API_URL = 'http://192.168.1.12:5001';
+export const API_URL = 'http://192.168.1.13:5001';
 
 // Helpers pour les endpoints majeurs
 export const ENDPOINTS = {
